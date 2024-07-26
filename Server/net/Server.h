@@ -7,6 +7,8 @@
 #include "Acceptor.h"
 #include "Connection.h"
 
+#include "threadpool/ThreadPool.h"
+
 #include <unordered_map>
 #include <memory>
 
@@ -18,9 +20,13 @@ namespace net
 	class Acceptor;
 	class Connection;
 
+	using EventLoops = std::vector<EventLoopPtr>;
+
 	class Server
 	{
 	public:
+		const static int childLoopsNum = 4;
+
 		Server(IPAddress addr);
 		~Server() {}
 
@@ -66,11 +72,17 @@ namespace net
 		}
 
 	private:
-		Socket m_sock;			// 服务端socket
-		IPAddress m_addr;		// 服务端地址
+		Socket m_sock;				// 服务端socket
+		IPAddress m_addr;			// 服务端地址
 
-		EventLoop m_loop;		// 主事件循环
-		Acceptor* m_acceptor;	// 接收器
+		EventLoopPtr m_loop;		// 主事件循环
+		EventLoops m_childLoops;	// 子事件循环
+		Acceptor* m_acceptor;		// 接收器
+
+		// 子EventLoop线程
+		threadpool::ThreadPool m_pool;
+
+		int m_polling;				// 轮询到的子事件循环下标
 
 		// 所有的连接
 		std::unordered_map<std::string, std::shared_ptr<Connection>> m_conns;
@@ -94,6 +106,12 @@ namespace net
 		/// </summary>
 		/// <param name="conn">连接</param>
 		void removeConnect(Connection* conn);
+
+		/// <summary>
+		/// 轮询事件循环
+		/// </summary>
+		/// <returns></returns>
+		EventLoopPtr polling();
 	};
 }
 

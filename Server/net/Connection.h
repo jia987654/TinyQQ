@@ -5,6 +5,8 @@
 #include "EventLoop.h"
 #include "socket.h"
 
+#include "buffer/Buffer.h"
+
 #include <functional>
 #include <memory>
 #include <string>
@@ -17,14 +19,14 @@ namespace net
 	class Connection;
 
 	using ConnectCallback = std::function<void(Connection* conn)>;
-	using ReadCallback = std::function<void(Connection* conn, char* buffer, int len)>;
+	using ReadCallback = std::function<void(Connection* conn, buffer::BufferPtr, int len)>;
 	using WriteCallback = std::function<void(Connection* conn)>;
 	using CloseCallback = std::function<void(Connection* conn)>;
 
 	class Connection
 	{
 	public:
-		Connection(std::string name, EventLoop* loop, int fd, IPAddress addr);
+		Connection(std::string name, EventLoopPtr loop, int fd, IPAddress addr);
 		~Connection() {}
 
 		/// <summary>
@@ -41,7 +43,7 @@ namespace net
 		/// <summary>
 		/// 获取连接所属的事件循环
 		/// </summary>
-		EventLoop* getLoop();
+		EventLoopPtr getLoop();
 
 		/// <summary>
 		/// 获取连接的地址
@@ -53,7 +55,7 @@ namespace net
 		/// 获取输入缓冲
 		/// </summary>
 		/// <returns></returns>
-		char* getRecvBuffer()
+		buffer::BufferPtr BuffergetRecvBuffer()
 		{
 			return m_readBuffer;
 		}
@@ -62,7 +64,7 @@ namespace net
 		/// 获取输出缓冲
 		/// </summary>
 		/// <returns></returns>
-		char* getSendBuffer()
+		buffer::BufferPtr getSendBuffer()
 		{
 			return m_writeBuffer;
 		}
@@ -97,22 +99,22 @@ namespace net
 		void setCloseCallback(CloseCallback callback);
 
 	private:
-		std::string m_name;					// 连接的名称
+		std::string m_name;								// 连接的名称
 
-		EventLoop* m_loop;					// 连接所属的事件循环
+		EventLoopPtr m_loop;							// 连接所属的事件循环
 
-		std::unique_ptr<Channel> m_ch;		// 连接对应的Channel
-		std::unique_ptr<Socket> m_sock;		// 连接对应的Socket
+		std::unique_ptr<Channel> m_ch;					// 连接对应的Channel
+		std::unique_ptr<Socket> m_sock;					// 连接对应的Socket
 
-		IPAddress m_addr;					// 连接的地址
+		IPAddress m_addr;								// 连接的地址
 
-		char* m_readBuffer;					// 输入缓冲
-		char* m_writeBuffer;				// 输出缓冲
+		buffer::BufferPtr m_readBuffer;	// 输入缓冲
+		buffer::BufferPtr m_writeBuffer;	// 输出缓冲
 	private:
-		ConnectCallback m_connectCallback;	// 建立新连接的回调函数
-		ReadCallback m_readCallback;		// 有消息可读的回调函数
-		WriteCallback m_writeCallback;		// 发送完消息的回调函数
-		CloseCallback m_closeCallback;		// 连接关闭的回调函数
+		ConnectCallback m_connectCallback;				// 建立新连接的回调函数
+		ReadCallback m_readCallback;					// 有消息可读的回调函数
+		WriteCallback m_writeCallback;					// 发送完消息的回调函数
+		CloseCallback m_closeCallback;					// 连接关闭的回调函数
 	private:
 		/// <summary>
 		/// 读事件回调函数

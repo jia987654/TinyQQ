@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "net/Server.h"
+#include "buffer/Buffer.h"
+#include "threadpool/ThreadPool.h"
 
 /// <summary>
 /// 有新的连接
@@ -18,11 +20,15 @@ void newConnect(net::Connection* conn)
 /// <param name="conn"></param>
 /// <param name="buffer"></param>
 /// <param name="len"></param>
-void onMessage(net::Connection* conn, char* buffer, int len)
+void onMessage(net::Connection* conn, buffer::BufferPtr buffer, int len)
 {
-	printf("Get Message Form [%s]:%s.\n", conn->getName().c_str(), buffer);
+	std::string msg = buffer->read();
 
-	strcpy(conn->getSendBuffer(), buffer);
+	printf("Get Message Form [%s]:%s.\n", conn->getName().c_str(), msg.c_str());
+
+	conn->getSendBuffer()->write((char*)msg.c_str(), len);
+
+	// strcpy(conn->getSendBuffer(), buffer);
 	conn->send();
 }
 

@@ -19,7 +19,7 @@ namespace net
 	class Acceptor
 	{
 	public:
-		Acceptor(EventLoop* loop, Socket* sock, IPAddress addr);
+		Acceptor(EventLoopPtr loop, Socket* sock, IPAddress addr);
 		~Acceptor() {}
 
 		/// <summary>
@@ -36,7 +36,7 @@ namespace net
 			m_newConnectionCallback = std::move(callback);
 		}
 	private:
-		EventLoop* m_loop;								// 接收器所属的事件循环
+		EventLoopPtr m_loop;							// 接收器所属的事件循环
 		
 		std::unique_ptr<Channel> m_ch;					// 接收器的Channel
 		std::unique_ptr<Socket> m_sock;					// 服务端的Socket

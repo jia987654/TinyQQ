@@ -2,7 +2,7 @@
 
 using namespace net;
 
-Acceptor::Acceptor(EventLoop* loop, Socket* sock, IPAddress addr) :
+Acceptor::Acceptor(EventLoopPtr loop, Socket* sock, IPAddress addr) :
 	m_loop(loop),
 	m_sock(sock),
 	m_addr(addr),

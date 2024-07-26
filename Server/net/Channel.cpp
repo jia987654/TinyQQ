@@ -7,7 +7,7 @@ using namespace net;
 
 #define existState(state) (m_revents & state)
 
-net::Channel::Channel(EventLoop* loop, int fd) :
+net::Channel::Channel(EventLoopPtr loop, int fd) :
 	m_loop(loop),
 	m_fd(fd),
 	m_events(0),

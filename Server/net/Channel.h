@@ -6,6 +6,7 @@
 #include "socket.h"
 
 #include <functional>
+#include <memory>
 #include <sys/epoll.h>
 
 #define IO_BUFFER_SIZE 512
@@ -23,11 +24,12 @@ namespace net
 	};
 
 	using Callback = std::function<void()>;
+	using EventLoopPtr = std::shared_ptr<EventLoop>;
 
 	class Channel
 	{
 	public:
-		Channel(EventLoop* loop, int fd);
+		Channel(EventLoopPtr loop, int fd);
 		~Channel() {}
 
 		/// <summary>
@@ -190,7 +192,7 @@ namespace net
 
 		bool m_isConnect;	// 是否连接到Selector
 
-		EventLoop* m_loop;	// 所在循环
+		EventLoopPtr m_loop;// 所在循环
 
 	private:
 		Callback m_readCallback;	// 读取数据回调

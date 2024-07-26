@@ -13,6 +13,8 @@ namespace net
 	class Selector;
 	class Channel;
 
+	// using EventLoopPtr = std::shared_ptr<EventLoop>;
+
 	class EventLoop
 	{
 	public:

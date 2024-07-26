@@ -5,17 +5,15 @@
 
 using namespace net;
 
-Connection::Connection(std::string name, EventLoop* loop, int fd, IPAddress addr) :
+Connection::Connection(std::string name, EventLoopPtr loop, int fd, IPAddress addr) :
 	m_name(name),
 	m_loop(loop),
 	m_addr(addr),
 	m_sock(std::make_unique<Socket>(fd)),
-	m_ch(std::make_unique<Channel>(loop, fd))
+	m_ch(std::make_unique<Channel>(loop, fd)),
+	m_readBuffer(std::make_shared<buffer::Buffer>()),
+	m_writeBuffer(std::make_shared<buffer::Buffer>())
 {
-	// 初始化缓冲区
-	m_readBuffer = (char*)malloc(sizeof(char) * IO_BUFFER_SIZE);
-	m_writeBuffer = (char*)malloc(sizeof(char) * IO_BUFFER_SIZE);
-
 	// 绑定Channel回调函数
 	m_ch->setReadCallback(std::bind(&Connection::readCallback, this));
 	m_ch->setHubCallback(std::bind(&Connection::hubCallback, this));
@@ -33,7 +31,7 @@ std::string Connection::getName()
 	return m_name;
 }
 
-EventLoop* Connection::getLoop()
+EventLoopPtr Connection::getLoop()
 {
 	return m_loop;
 }
@@ -45,7 +43,9 @@ IPAddress Connection::getAddr()
 
 void Connection::send()
 {
-	int len = ::send(m_sock->getFd(), m_writeBuffer, sizeof(m_writeBuffer), 0);
+	std::string str = m_writeBuffer->read();
+
+	int len = ::send(m_sock->getFd(), str.c_str(), str.size(), 0);
 	if (len < 0)
 	{
 		printf("Sned Failed.\n");
@@ -78,10 +78,7 @@ void Connection::setCloseCallback(CloseCallback callback)
 
 void Connection::readCallback()
 {
-	memset(m_readBuffer, 0x00, sizeof(char) * IO_BUFFER_SIZE);
-	memset(m_writeBuffer, 0x00, sizeof(char) * IO_BUFFER_SIZE);
-
-	int len = recv(m_sock->getFd(), m_readBuffer, sizeof(char) * IO_BUFFER_SIZE, 0);
+	int len = m_readBuffer->readFd(m_sock->getFd());
 
 	// 断开连接
 	if (len == 0)
@@ -108,6 +105,7 @@ void net::Connection::hubCallback()
 	*/
 
 	m_ch->disableAll();
+	m_loop->removeChannel(m_ch.get());
 
 	if (m_closeCallback) m_closeCallback(this);
 }
